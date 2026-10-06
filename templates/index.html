@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}SkillSync AI - Smart Resume Analyzer & Job Matcher{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+  <div class="hero-pill">
+    <span>✨</span> Next-Gen Career Intelligence
+  </div>
+  <h1 class="hero-title">
+    Transform Your Resume Into <br>
+    <span class="gradient-text">Job-Winning Confidence</span>
+  </h1>
+  <p class="hero-subtitle">
+    Upload your resume to extract skills, experience, and qualifications instantly. Match against any job description to discover your skill gaps and get personalized study recommendations.
+  </p>
+
+  <!-- Upload Area -->
+  <div class="glass-card upload-card">
+    <form action="{{ url_for('upload_resume') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+      <div class="dropzone" id="dropzone">
+        <input type="file" name="resume" id="resume-file-input" accept=".pdf,.docx,.doc" required>
+        <div class="dropzone-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h3 class="dropzone-title">Drop your resume here or click to browse</h3>
+        <p class="dropzone-desc">Fast, private parsing. PDF and DOCX supported up to 16MB.</p>
+        
+        <div class="format-badges">
+          <span class="format-badge">.PDF</span>
+          <span class="format-badge">.DOCX</span>
+          <span class="format-badge">.DOC</span>
+        </div>
+
+        <div class="selected-file-preview" id="file-preview">
+          <span>📄</span>
+          <span id="file-name-text"></span>
+          <span id="file-size-text" style="color: var(--text-dim); font-size: 0.8rem;"></span>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
+        <button type="submit" class="btn btn-primary btn-lg" id="submit-upload-btn">
+          <span>Analyze Resume</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section>
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">How SkillSync AI Works</h2>
+    <p style="color: var(--text-muted); max-width: 550px; margin: 0 auto;">Three simple steps to supercharge your job applications and interviews.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="glass-card feature-box">
+      <div class="feature-icon-wrapper indigo">
+        <span>🔍</span>
+      </div>
+      <h3 class="feature-title">1. Deep Resume Parsing</h3>
+      <p class="feature-desc">
+        Natural language processing analyzes your profile, pulling technical skills, work achievements, and educational qualifications seamlessly.
+      </p>
+    </div>
+
+    <div class="glass-card feature-box">
+      <div class="feature-icon-wrapper emerald">
+        <span>🎯</span>
+      </div>
+      <h3 class="feature-title">2. Target Job Matching</h3>
+      <p class="feature-desc">
+        Paste any job listing to see an instant match score breakdown, highlighting your strengths and pinpointing exact missing requirements.
+      </p>
+    </div>
+
+    <div class="glass-card feature-box">
+      <div class="feature-icon-wrapper cyan">
+        <span>🚀</span>
+      </div>
+      <h3 class="feature-title">3. Actionable Gap Plan</h3>
+      <p class="feature-desc">
+        Receive curated learning resources, courses, estimated upskilling times, and foundational skills to turn gaps into competitive advantages.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

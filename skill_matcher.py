@@ -7,11 +7,11 @@ import random
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Download NLTK data if not already present
+# WordNet is optional and used for synonym fallback if available
 try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
-    nltk.download('wordnet')
+    pass
 
 # Dictionary of related skills
 RELATED_SKILLS = {

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Analysis - {{ resume.name or 'Candidate' }} | SkillSync AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+  
+  <!-- Left Column: Resume Profile -->
+  <aside>
+    <div class="glass-card profile-card">
+      <div class="profile-header">
+        <div class="avatar">
+          {{ resume.name[:1] if resume.name else 'U' }}
+        </div>
+        <div>
+          <h2 style="font-size: 1.35rem; margin-bottom: 0.2rem;">{{ resume.name or "Uploaded Resume" }}</h2>
+          <span style="color: var(--accent-indigo); font-size: 0.85rem; font-weight: 600;">Parsed Candidate Profile</span>
+        </div>
+      </div>
+
+      <div class="profile-meta">
+        {% if resume.email %}
+          <div class="meta-row">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span>{{ resume.email }}</span>
+          </div>
+        {% endif %}
+        
+        {% if resume.phone %}
+          <div class="meta-row">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            <span>{{ resume.phone }}</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Extracted Skills -->
+      <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h3 style="font-size: 1.05rem;">Detected Skills</h3>
+          <span style="font-size: 0.8rem; color: var(--accent-indigo); font-weight: 600;">{{ resume.skills|length }} found</span>
+        </div>
+        
+        {% if resume.skills %}
+          <div class="skill-tags">
+            {% for skill in resume.skills %}
+              <span class="skill-tag neutral">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--text-dim); font-size: 0.85rem;">No technical skills matched in the document.</p>
+        {% endif %}
+      </div>
+
+      <!-- Experience Section -->
+      {% if resume.experience %}
+        <div style="margin-bottom: 2rem;">
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Experience</h3>
+          <div class="timeline">
+            {% for exp in resume.experience %}
+              <div class="timeline-item">
+                <div class="timeline-role">{{ exp.position or "Position" }}</div>
+                <div class="timeline-company">{{ exp.company or "Company" }}</div>
+                {% if exp.duration %}
+                  <div class="timeline-period">{{ exp.duration }}</div>
+                {% endif %}
+                {% if exp.description %}
+                  <ul class="timeline-desc">
+                    {% for point in exp.description[:3] %}
+                      <li>{{ point }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Education Section -->
+      {% if resume.education %}
+        <div>
+          <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Education</h3>
+          <div class="timeline">
+            {% for edu in resume.education %}
+              <div class="timeline-item">
+                <div class="timeline-role">{{ edu.degree or "Degree / Qualification" }}</div>
+                <div class="timeline-company">{{ edu.institution or "Institution" }}</div>
+                {% if edu.period %}
+                  <div class="timeline-period">{{ edu.period }}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div style="margin-top: 2rem; border-top: 1px solid var(--border-subtle); padding-top: 1.25rem;">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary" style="width: 100%;">
+          <span>📤 Upload Different Resume</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Column: Target Job Description Matching Form -->
+  <main>
+    <div class="glass-card">
+      <div style="margin-bottom: 1.5rem;">
+        <div class="hero-pill" style="margin-bottom: 0.75rem;">
+          <span>🎯</span> Phase 2: Role Comparison
+        </div>
+        <h2 style="font-size: 1.85rem; margin-bottom: 0.5rem;">Match Against a Target Job</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+          Paste the requirements or full job posting below. SkillSync AI will compare the requirements with your resume, determine your compatibility score, and generate a customized gap roadmap.
+        </p>
+      </div>
+
+      <!-- Quick sample job chips -->
+      <div class="quick-fill-container">
+        <span class="quick-fill-label">Quick sample jobs:</span>
+        <button type="button" class="quick-chip sample-job-chip" data-sample="data-analyst">
+          📊 Data Analyst
+        </button>
+        <button type="button" class="quick-chip sample-job-chip" data-sample="software-engineer">
+          💻 Full Stack Engineer
+        </button>
+        <button type="button" class="quick-chip sample-job-chip" data-sample="marketing-manager">
+          📈 Marketing Manager
+        </button>
+      </div>
+
+      <form action="{{ url_for('analyze_job') }}" method="POST" id="analyze-job-form">
+        <div class="form-group">
+          <label for="job_title" class="form-label">Target Job Title</label>
+          <input 
+            type="text" 
+            name="job_title" 
+            id="job_title" 
+            class="form-input" 
+            placeholder="e.g. Senior Data Analyst or Frontend Developer" 
+            required
+            value="Data Analyst"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="job_description" class="form-label">Job Description & Requirements</label>
+          <textarea 
+            name="job_description" 
+            id="job_description" 
+            class="form-textarea" 
+            placeholder="Paste the full job description or key responsibilities and required skills here..."
+            required
+          >We are seeking a talented Data Analyst to join our team.
+
+Responsibilities and Requirements:
+• 2+ years of practical experience with SQL and relational databases
+• Expertise in Python or R for statistical analysis and modeling
+• Data visualization skills using Tableau or Power BI
+• Advanced Excel proficiency
+• Strong critical thinking and attention to detail</textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary btn-lg" id="analyze-submit-btn">
+            <span>Analyze Skill Fit & Gaps</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+</div>
+{% endblock %}
