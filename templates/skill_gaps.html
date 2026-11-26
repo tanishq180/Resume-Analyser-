@@ -1,58 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Skill Gap Analysis: {{ job.title }} - SkillSync AI{% endblock %}
+{% block title %}Skill Gap Analysis: {{ job.title }} — SkillSync AI{% endblock %}
 
 {% block content %}
-<div style="margin: 2rem 0 4rem;">
-
   <!-- Header Banner -->
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+  <div class="page-header">
     <div>
-      <div class="hero-pill" style="margin-bottom: 0.5rem;">
-        <span>📊</span> Analysis Report
-      </div>
-      <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">
+      <span class="pill-tag">Skill Gap Analysis</span>
+      <h1 style="font-size: clamp(26px, 4vw, 38px); margin-bottom: 4px;">
         {{ job.title or "Job Position" }}
         {% if job.company %}
-          <span style="color: var(--text-muted); font-size: 1.5rem; font-weight: 400;">at {{ job.company }}</span>
+          <span style="color: var(--ink-muted); font-size: 0.65em; font-weight: 600;">at {{ job.company }}</span>
         {% endif %}
       </h1>
-      <p style="color: var(--text-muted); font-size: 0.95rem;">
-        Evaluated for <strong>{{ resume.name or "Candidate" }}</strong>
-      </p>
+      <p class="lead">Evaluated for <strong>{{ resume.name or "Candidate" }}</strong></p>
     </div>
 
-    <div style="display: flex; gap: 0.75rem;">
-      <a href="{{ url_for('resume_analysis') }}" class="btn btn-secondary" id="compare-another-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="19" y1="12" x2="5" y2="12"></line>
-          <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
+    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">
+      <a href="{{ url_for('resume_analysis') }}" class="btn-secondary" id="compare-another-btn">
         Compare Another Role
+      </a>
+      <a href="{{ url_for('index') }}" class="btn-secondary">
+        New Resume
       </a>
     </div>
   </div>
 
   <!-- Match Overview Card -->
-  <div class="glass-card" style="margin-bottom: 2rem;">
+  <div class="panel">
     <div class="match-overview">
-      
       <!-- Circular SVG Gauge -->
       <div class="score-circle-container">
         <div class="circle-progress-wrap">
           <svg viewBox="0 0 160 160">
             <circle class="circle-bg" cx="80" cy="80" r="68"></circle>
-            <circle 
-              class="circle-fill" 
-              cx="80" 
-              cy="80" 
+            <circle
+              class="circle-fill"
+              cx="80"
+              cy="80"
               r="68"
               data-percent="{{ job.match_percentage|round(1) }}"
-              stroke="{% if job.match_percentage >= 70 %}var(--accent-emerald){% elif job.match_percentage >= 40 %}var(--accent-indigo){% else %}var(--accent-rose){% endif %}"
+              stroke="{% if job.match_percentage >= 70 %}#10b981{% elif job.match_percentage >= 40 %}var(--cobalt-primary){% else %}#ef4444{% endif %}"
             ></circle>
           </svg>
           <div class="circle-text-center">
-            <div class="circle-percent-val" style="color: {% if job.match_percentage >= 70 %}#34d399{% elif job.match_percentage >= 40 %}#818cf8{% else %}#fb7185{% endif %};">
+            <div class="circle-percent-val" style="color: {% if job.match_percentage >= 70 %}#10b981{% elif job.match_percentage >= 40 %}var(--cobalt-primary){% else %}#ef4444{% endif %};">
               {{ job.match_percentage|round|int }}%
             </div>
             <div class="circle-percent-lbl">Match Score</div>
@@ -60,161 +52,127 @@
         </div>
       </div>
 
-      <!-- High-level Metric Boxes -->
+      <!-- High-Level Metrics -->
       <div>
-        <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 1.35rem; margin-bottom: 0.4rem;">
           {% if job.match_percentage >= 75 %}
-            🎉 Outstanding Alignment!
+            Outstanding Alignment
           {% elif job.match_percentage >= 50 %}
-            ⚡ Strong Candidate with Fast Upskill Potential
+            Strong Candidate with Fast Upskill Potential
           {% else %}
-            🌱 Significant Skill Gaps Identified
+            Significant Skill Gaps Identified
           {% endif %}
-        </h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">
-          Your resume satisfies <strong>{{ job.matching_skills|length }}</strong> of the <strong>{{ job.required_skills|length }}</strong> core skills requested in this posting.
+        </h2>
+        <p style="color: var(--ink-muted); font-size: 0.95rem; margin-bottom: 1.25rem;">
+          Your resume satisfies <strong>{{ job.matching_skills|length }}</strong> of the <strong>{{ job.required_skills|length }}</strong> core skills detected in this job description.
         </p>
 
         <div class="score-stats">
           <div class="stat-box">
-            <div class="stat-value" style="color: #34d399;">{{ job.matching_skills|length }}</div>
+            <div class="stat-value" style="color: #10b981;">{{ job.matching_skills|length }}</div>
             <div class="stat-label">Matching Skills</div>
           </div>
           <div class="stat-box">
-            <div class="stat-value" style="color: #fb7185;">{{ job.missing_skills|length }}</div>
+            <div class="stat-value" style="color: #ef4444;">{{ job.missing_skills|length }}</div>
             <div class="stat-label">Missing Skills</div>
           </div>
           <div class="stat-box">
-            <div class="stat-value" style="color: #38bdf8;">{{ job.required_skills|length }}</div>
+            <div class="stat-value" style="color: var(--cobalt-primary);">{{ job.required_skills|length }}</div>
             <div class="stat-label">Total Job Skills</div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- Requirements Context (Experience & Education) -->
     {% if job.experience_req.overall or job.education_req.degree or job.preferred_skills %}
-      <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.9rem;">
+      <div class="req-meta-bar">
         {% if job.experience_req.overall %}
           <div>
-            <span style="color: var(--text-dim);">Experience Required:</span>
-            <strong style="color: #e0e7ff; margin-left: 0.35rem;">{{ job.experience_req.overall }}+ Years</strong>
+            Experience Required: <strong>{{ job.experience_req.overall }}+ Years</strong>
           </div>
         {% endif %}
         {% if job.education_req.degree %}
           <div>
-            <span style="color: var(--text-dim);">Target Degree:</span>
-            <strong style="color: #e0e7ff; margin-left: 0.35rem;">{{ job.education_req.degree|title }}{% if job.education_req.field %} in {{ job.education_req.field }}{% endif %}</strong>
+            Target Degree: <strong>{{ job.education_req.degree|title }}{% if job.education_req.field %} in {{ job.education_req.field }}{% endif %}</strong>
           </div>
         {% endif %}
         {% if job.preferred_skills %}
           <div>
-            <span style="color: var(--text-dim);">Nice-to-Have Skills:</span>
-            <strong style="color: #c4b5fd; margin-left: 0.35rem;">{{ job.preferred_skills|join(', ') }}</strong>
+            Nice-to-Have Skills: <strong>{{ job.preferred_skills|join(', ') }}</strong>
           </div>
         {% endif %}
       </div>
     {% endif %}
-
   </div>
 
   <!-- Side-by-Side Skills Breakdown -->
   <div class="breakdown-grid">
-    
-    <!-- Matching Skills -->
-    <div class="glass-card column-card">
+    <div class="panel">
       <div class="column-header">
-        <div class="column-title" style="color: #34d399;">
-          <span>✅</span>
-          <span>Matched Qualifications</span>
-        </div>
-        <span class="badge-count" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7;">
-          {{ job.matching_skills|length }}
-        </span>
+        <div class="column-title" style="color: var(--matched-text);">Matched Qualifications</div>
+        <span class="badge-count matched">{{ job.matching_skills|length }}</span>
       </div>
-      
+
       {% if job.matching_skills %}
         <div class="skill-tags">
           {% for skill in job.matching_skills %}
-            <span class="skill-tag matched">✓ {{ skill }}</span>
+            <span class="skill-tag matched">&#10003; {{ skill }}</span>
           {% endfor %}
         </div>
       {% else %}
-        <p style="color: var(--text-dim); font-size: 0.9rem;">No directly matching skills found in your resume.</p>
+        <p style="color: var(--ink-muted); font-size: 0.9rem;">No directly matching skills found in your resume.</p>
       {% endif %}
     </div>
 
-    <!-- Missing Skills -->
-    <div class="glass-card column-card">
+    <div class="panel">
       <div class="column-header">
-        <div class="column-title" style="color: #fb7185;">
-          <span>⚠️</span>
-          <span>Missing Requirements</span>
-        </div>
-        <span class="badge-count" style="background: rgba(244, 63, 94, 0.15); color: #fda4af;">
-          {{ job.missing_skills|length }}
-        </span>
+        <div class="column-title" style="color: var(--missing-text);">Missing Requirements</div>
+        <span class="badge-count missing">{{ job.missing_skills|length }}</span>
       </div>
 
       {% if job.missing_skills %}
         <div class="skill-tags">
           {% for skill in job.missing_skills %}
-            <span class="skill-tag missing">✕ {{ skill }}</span>
+            <span class="skill-tag missing">&#10005; {{ skill }}</span>
           {% endfor %}
         </div>
       {% else %}
-        <p style="color: #34d399; font-size: 0.9rem;">Congratulations! You possess 100% of the listed core skills.</p>
+        <p style="color: var(--matched-text); font-size: 0.9rem; font-weight: 600;">
+          Congratulations! You possess 100% of the listed core skills.
+        </p>
       {% endif %}
     </div>
-
   </div>
 
-  <!-- Skill Gaps & Strategic Recommendations Roadmap -->
+  <!-- Personalized Upskilling Roadmap -->
   {% if job.recommendations %}
-    <div class="glass-card">
-      <div style="margin-bottom: 1.5rem;">
-        <div class="hero-pill" style="margin-bottom: 0.5rem;">
-          <span>🚀</span> Career Growth Accelerator
-        </div>
-        <h2 style="font-size: 1.75rem; margin-bottom: 0.35rem;">Personalized Upskilling Roadmap</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-          Close your skill gaps with curated learning materials and leverage your existing knowledge to accelerate mastery.
-        </p>
-      </div>
+    <div class="panel">
+      <span class="pill-tag">Upskilling Roadmap</span>
+      <h2 style="font-size: 1.35rem; margin-bottom: 0.35rem;">Personalized Learning Plan</h2>
+      <p style="color: var(--ink-muted); font-size: 0.92rem;">
+        Close your skill gaps with curated learning materials and leverage your existing skills to ramp up faster.
+      </p>
 
       <div class="recommendation-list">
         {% for rec in job.recommendations %}
           <div class="recommendation-card">
-            
             <div class="rec-header">
-              <div class="rec-skill-name">
-                <span>📘</span>
-                <span>{{ rec.skill|upper }}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span class="rec-time">
-                  ⏱️ Est. Study Time: <strong style="color: #f1f5f9;">{{ rec.estimated_time }}</strong>
-                </span>
-              </div>
+              <div class="rec-skill-name">{{ rec.skill|upper }}</div>
+              <span class="rec-time">Est. Study Time: <strong>{{ rec.estimated_time }}</strong></span>
             </div>
 
             {% if rec.related_skills %}
-              <div style="margin-bottom: 0.85rem; font-size: 0.88rem;">
-                <span style="color: var(--text-muted);">Transferable Knowledge: </span>
+              <div style="margin-bottom: 0.75rem; font-size: 0.85rem;">
+                <span style="color: var(--ink-muted);">Transferable Knowledge: </span>
                 {% for related in rec.related_skills %}
-                  <span class="skill-tag related" style="font-size: 0.75rem; padding: 0.15rem 0.55rem;">
-                    {{ related }}
-                  </span>
+                  <span class="skill-tag related" style="font-size: 0.75rem; padding: 2px 8px;">{{ related }}</span>
                 {% endfor %}
               </div>
             {% endif %}
 
-            <!-- External Learning Resources -->
             <div>
-              <div style="font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.4rem; font-weight: 600;">
-                Recommended Guides & Courses
+              <div style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 700;">
+                Recommended Guides &amp; Courses
               </div>
               <div class="resource-links">
                 {% for res in rec.resources %}
@@ -229,12 +187,9 @@
                 {% endfor %}
               </div>
             </div>
-
           </div>
         {% endfor %}
       </div>
     </div>
   {% endif %}
-
-</div>
 {% endblock %}

@@ -251,6 +251,27 @@ def extract_education(text):
     
     return education
 
+def parse_resume_text(text):
+    """Parse raw resume text and extract structured candidate information."""
+    if not text or not text.strip():
+        raise ValueError("No readable text found in resume.")
+
+    contact_info = extract_contact_info(text)
+    skills = extract_skills(text)
+    experience = extract_experience(text)
+    education = extract_education(text)
+
+    return {
+        'name': contact_info['name'],
+        'email': contact_info['email'],
+        'phone': contact_info['phone'],
+        'skills': skills,
+        'experience': experience,
+        'education': education,
+        'raw_text': text
+    }
+
+
 def parse_resume(file_path):
     """Parse resume file and extract information."""
     try:
@@ -261,27 +282,13 @@ def parse_resume(file_path):
             text = extract_text_from_pdf(file_path)
         elif file_extension in ['.docx', '.doc']:
             text = extract_text_from_docx(file_path)
+        elif file_extension == '.txt':
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
+                text = file.read()
         else:
             raise ValueError(f"Unsupported file format: {file_extension}")
         
-        # Extract information
-        contact_info = extract_contact_info(text)
-        skills = extract_skills(text)
-        experience = extract_experience(text)
-        education = extract_education(text)
-        
-        # Combine all extracted information
-        resume_data = {
-            'name': contact_info['name'],
-            'email': contact_info['email'],
-            'phone': contact_info['phone'],
-            'skills': skills,
-            'experience': experience,
-            'education': education,
-            'raw_text': text
-        }
-        
-        return resume_data
+        return parse_resume_text(text)
     
     except Exception as e:
         logger.error(f"Error parsing resume: {str(e)}")

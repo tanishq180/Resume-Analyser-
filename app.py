@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 import tempfile
 import os.path
 
-from resume_parser import parse_resume
+from resume_parser import parse_resume, parse_resume_text
 from job_analyzer import analyze_job_description
 from skill_matcher import match_skills, calculate_skill_gaps, get_recommendations
 
@@ -20,7 +20,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "resume-analyzer-secret")
 
 # Configure upload settings
 UPLOAD_FOLDER = tempfile.gettempdir()
-ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc'}
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'doc', 'txt'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
@@ -96,6 +96,104 @@ def resume_analysis():
     resume_data = user_data[user_id]['resume']
     return render_template('resume_analysis.html', resume=resume_data)
 
+def _run_job_analysis(user_id, job_title, job_description):
+    """Analyze a job description against the user's stored resume and return its index."""
+    job_data = analyze_job_description(job_description, job_title or 'Job Position')
+
+    if 'jobs' not in user_data[user_id]:
+        user_data[user_id]['jobs'] = []
+
+    resume_skills = user_data[user_id]['resume']['skills']
+    match_percentage, matching_skills, missing_skills = match_skills(resume_skills, job_data['required_skills'])
+    skill_gaps = calculate_skill_gaps(resume_skills, job_data['required_skills'])
+    recommendations = get_recommendations(missing_skills)
+
+    job_data['match_percentage'] = match_percentage
+    job_data['matching_skills'] = matching_skills
+    job_data['missing_skills'] = missing_skills
+    job_data['skill_gaps'] = skill_gaps
+    job_data['recommendations'] = recommendations
+
+    user_data[user_id]['jobs'].append(job_data)
+    return len(user_data[user_id]['jobs']) - 1
+
+
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    """Unified endpoint for ResumePilot UI: accepts file upload or pasted text plus optional job details."""
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('Accept', '')
+    )
+
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+    user_id = session['user_id']
+
+    uploaded_file = request.files.get('resume')
+    pasted_text = request.form.get('resume_text', '').strip()
+    job_title = request.form.get('job_title', '').strip() or 'Target Role'
+    job_description = request.form.get('job_description', '').strip()
+    file_name = request.form.get('file_name', '').strip() or 'Pasted Text'
+
+    file_path = None
+    try:
+        if uploaded_file and uploaded_file.filename:
+            if not allowed_file(uploaded_file.filename):
+                msg = 'File type not allowed. Please upload a PDF, DOCX, DOC, or TXT file.'
+                if is_ajax:
+                    return jsonify({'error': msg}), 400
+                flash(msg, 'danger')
+                return redirect(url_for('index'))
+
+            filename = secure_filename(uploaded_file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f"{uuid.uuid4().hex}_{filename}")
+            uploaded_file.save(file_path)
+            try:
+                resume_data = parse_resume(file_path)
+            except Exception as parse_err:
+                if pasted_text:
+                    logger.warning(f"Server file parse failed ({parse_err}); falling back to client-extracted text.")
+                    resume_data = parse_resume_text(pasted_text)
+                else:
+                    raise
+            resume_data['file_name'] = uploaded_file.filename
+        elif pasted_text:
+            resume_data = parse_resume_text(pasted_text)
+            resume_data['file_name'] = file_name
+        else:
+            msg = 'Please upload a resume file or paste your resume text.'
+            if is_ajax:
+                return jsonify({'error': msg}), 400
+            flash(msg, 'warning')
+            return redirect(url_for('index'))
+
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id]['resume'] = resume_data
+
+        if job_description:
+            job_index = _run_job_analysis(user_id, job_title, job_description)
+            target_url = url_for('skill_gaps', job_index=job_index)
+        else:
+            target_url = url_for('resume_analysis')
+
+        if is_ajax:
+            return jsonify({'redirect': target_url})
+        return redirect(target_url)
+
+    except Exception as e:
+        logger.error(f"Error in /analyze: {str(e)}")
+        msg = f'Error analyzing resume: {str(e)}'
+        if is_ajax:
+            return jsonify({'error': msg}), 400
+        flash(msg, 'danger')
+        return redirect(url_for('index'))
+    finally:
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+
 @app.route('/analyze_job', methods=['POST'])
 def analyze_job():
     user_id = session.get('user_id')
@@ -110,29 +208,8 @@ def analyze_job():
         flash('Please enter a job description', 'warning')
         return redirect(url_for('resume_analysis'))
     
-    # Analyze job description
-    job_data = analyze_job_description(job_description, job_title)
-    
-    # Store job data
-    if 'jobs' not in user_data[user_id]:
-        user_data[user_id]['jobs'] = []
-    
-    user_data[user_id]['jobs'].append(job_data)
-    
-    # Match skills and calculate gaps
-    resume_skills = user_data[user_id]['resume']['skills']
-    match_percentage, matching_skills, missing_skills = match_skills(resume_skills, job_data['required_skills'])
-    skill_gaps = calculate_skill_gaps(resume_skills, job_data['required_skills'])
-    recommendations = get_recommendations(missing_skills)
-    
-    # Store analysis results
-    job_data['match_percentage'] = match_percentage
-    job_data['matching_skills'] = matching_skills
-    job_data['missing_skills'] = missing_skills
-    job_data['skill_gaps'] = skill_gaps
-    job_data['recommendations'] = recommendations
-    
-    return redirect(url_for('skill_gaps', job_index=len(user_data[user_id]['jobs']) - 1))
+    job_index = _run_job_analysis(user_id, job_title, job_description)
+    return redirect(url_for('skill_gaps', job_index=job_index))
 
 @app.route('/skill_gaps/<int:job_index>')
 def skill_gaps(job_index):

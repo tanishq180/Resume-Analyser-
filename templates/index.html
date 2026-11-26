@@ -1,98 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}SkillSync AI - Smart Resume Analyzer & Job Matcher{% endblock %}
+{% block title %}SkillSync AI — Is Your Resume Ready to Send?{% endblock %}
+
+{% block head_extra %}
+  <!-- Client-side preview extraction (PDF.js & Mammoth.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+{% endblock %}
+
+{% block nav_actions %}
+  <button type="button" class="btn-secondary-ghost" id="sampleBtn" aria-label="Load a sample resume for testing">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+      <polyline points="13 2 13 9 20 9"></polyline>
+    </svg>
+    Try sample resume
+  </button>
+{% endblock %}
 
 {% block content %}
-<section class="hero-section">
-  <div class="hero-pill">
-    <span>✨</span> Next-Gen Career Intelligence
-  </div>
-  <h1 class="hero-title">
-    Transform Your Resume Into <br>
-    <span class="gradient-text">Job-Winning Confidence</span>
-  </h1>
-  <p class="hero-subtitle">
-    Upload your resume to extract skills, experience, and qualifications instantly. Match against any job description to discover your skill gaps and get personalized study recommendations.
-  </p>
+  <!-- Hero Header -->
+  <section class="hero-section">
+    <h1>Is your resume ready to send?</h1>
+    <p class="lead">Add your resume, tell us the role you're going for, and see which sections we find.</p>
+  </section>
 
-  <!-- Upload Area -->
-  <div class="glass-card upload-card">
-    <form action="{{ url_for('upload_resume') }}" method="POST" enctype="multipart/form-data" id="upload-form">
-      <div class="dropzone" id="dropzone">
-        <input type="file" name="resume" id="resume-file-input" accept=".pdf,.docx,.doc" required>
-        <div class="dropzone-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
+  <!-- Two-Column Grid -->
+  <main class="grid">
+
+    <!-- Left Column: Tabs & Paper Sheet -->
+    <div>
+      <div class="tabs" role="tablist" aria-label="Resume input method">
+        <button role="tab" id="t-up" aria-selected="true" aria-controls="drop">Upload file</button>
+        <button role="tab" id="t-pa" aria-selected="false" aria-controls="paste">Paste text</button>
+      </div>
+
+      <div class="sheet">
+        <!-- Upload Mode Dropzone -->
+        <label class="drop" id="drop" tabindex="0" role="button" aria-label="Upload resume file">
+          <input type="file" id="input" accept=".pdf,.docx,.doc,.txt">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
           </svg>
-        </div>
-        <h3 class="dropzone-title">Drop your resume here or click to browse</h3>
-        <p class="dropzone-desc">Fast, private parsing. PDF and DOCX supported up to 16MB.</p>
-        
-        <div class="format-badges">
-          <span class="format-badge">.PDF</span>
-          <span class="format-badge">.DOCX</span>
-          <span class="format-badge">.DOC</span>
+          <b>Drop your resume</b>
+          <small>PDF, DOCX or TXT, up to 16 MB. Or click to browse.</small>
+        </label>
+
+        <!-- Loaded Document Preview -->
+        <div class="doc" id="doc" hidden>
+          <header>
+            <strong id="fname">resume.pdf</strong>
+            <button id="remove" type="button">Remove</button>
+          </header>
+          <pre class="txt" id="txt" tabindex="0" aria-label="Extracted resume text preview"></pre>
         </div>
 
-        <div class="selected-file-preview" id="file-preview">
-          <span>📄</span>
-          <span id="file-name-text"></span>
-          <span id="file-size-text" style="color: var(--text-dim); font-size: 0.8rem;"></span>
-        </div>
+        <!-- Paste Mode Textarea -->
+        <textarea id="paste" placeholder="Paste your resume text here..." aria-label="Paste resume text" hidden></textarea>
       </div>
 
-      <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
-        <button type="submit" class="btn btn-primary btn-lg" id="submit-upload-btn">
-          <span>Analyze Resume</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </button>
-      </div>
-    </form>
-  </div>
-</section>
-
-<!-- Features Grid -->
-<section>
-  <div style="text-align: center; margin-bottom: 2rem;">
-    <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">How SkillSync AI Works</h2>
-    <p style="color: var(--text-muted); max-width: 550px; margin: 0 auto;">Three simple steps to supercharge your job applications and interviews.</p>
-  </div>
-
-  <div class="features-grid">
-    <div class="glass-card feature-box">
-      <div class="feature-icon-wrapper indigo">
-        <span>🔍</span>
-      </div>
-      <h3 class="feature-title">1. Deep Resume Parsing</h3>
-      <p class="feature-desc">
-        Natural language processing analyzes your profile, pulling technical skills, work achievements, and educational qualifications seamlessly.
-      </p>
+      <!-- Inline Error Banner -->
+      <div class="err" id="err" role="alert"></div>
     </div>
 
-    <div class="glass-card feature-box">
-      <div class="feature-icon-wrapper emerald">
-        <span>🎯</span>
+    <!-- Right Column: Target Role Panel -->
+    <div class="panel">
+      <h2>Target role</h2>
+
+      <div class="f">
+        <label for="role">Job title</label>
+        <input type="text" id="role" placeholder="e.g. Senior Product Designer" autocomplete="organization-title">
       </div>
-      <h3 class="feature-title">2. Target Job Matching</h3>
-      <p class="feature-desc">
-        Paste any job listing to see an instant match score breakdown, highlighting your strengths and pinpointing exact missing requirements.
-      </p>
+
+      <div class="f">
+        <label for="jd">Job description (optional)</label>
+        <textarea id="jd" placeholder="Paste the job posting requirements to compare keywords..."></textarea>
+      </div>
+
+      <label>Sections found</label>
+      <div class="chips" id="chips" role="list" aria-label="Detected resume sections"></div>
+
+      <button class="go" id="go" type="button" disabled aria-label="Analyze resume">
+        <span>Analyze resume</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+
+      <div class="note" id="note">Add a resume to get started.</div>
     </div>
 
-    <div class="glass-card feature-box">
-      <div class="feature-icon-wrapper cyan">
-        <span>🚀</span>
-      </div>
-      <h3 class="feature-title">3. Actionable Gap Plan</h3>
-      <p class="feature-desc">
-        Receive curated learning resources, courses, estimated upskilling times, and foundational skills to turn gaps into competitive advantages.
-      </p>
-    </div>
-  </div>
-</section>
+  </main>
 {% endblock %}
