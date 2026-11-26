@@ -14,13 +14,12 @@ logger = logging.getLogger(__name__)
 # Download NLTK data if not already present
 try:
     nltk.data.find('tokenizers/punkt')
+    nltk.data.find('tokenizers/punkt_tab')
     nltk.data.find('corpora/stopwords')
-    nltk.data.find('tokenizers/punkt')
-
 except LookupError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('punkt_tab')
+    nltk.download('punkt', quiet=True)
+    nltk.download('punkt_tab', quiet=True)
+    nltk.download('stopwords', quiet=True)
 
 # Common technical skills to look for
 COMMON_SKILLS = [
